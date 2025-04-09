@@ -26,9 +26,9 @@ class VolcanoApp(param.Parameterized):
             options=dict(zip(self.comparison_names, range(len(self.comparison_names))))
         )
 
-        # Create search bar with debounce (500 ms) so that changes trigger after typing or pressing enter
+        # Create search bar
         self.search_input = pn.widgets.TextInput(
-            placeholder='Search m/z...', name='Search', debounce=500
+            placeholder='Search m/z...', name='Search'
         )
 
         # Create buttons
