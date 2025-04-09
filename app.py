@@ -46,7 +46,6 @@ class VolcanoApp(param.Parameterized):
         self.table = pn.widgets.Tabulator(
             pagination=None,
             height=800,
-            virtualization=True,
             selectable='checkbox',
             header_align='center',
             layout='fit_columns',
