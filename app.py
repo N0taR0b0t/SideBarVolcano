@@ -18,7 +18,7 @@ class VolcanoApp(param.Parameterized):
 
         # Create comparison dropdown options
         self.comparison_names = [comp.get("title", f"Comparison {i+1}")
-                               for i, comp in enumerate(self.comparisons)]
+                                 for i, comp in enumerate(self.comparisons)]
 
         # Create widgets
         self.comparison_select = pn.widgets.Select(
@@ -42,7 +42,7 @@ class VolcanoApp(param.Parameterized):
             {'field': 'Formula', 'title': 'Formula', 'headerTooltip': 'Chemical Formula'},
         ]
 
-        # Create table with virtualization (scrollable)
+        # Create table (scrollable, no pagination, remove unsupported param)
         self.table = pn.widgets.Tabulator(
             pagination=None,
             height=800,
