@@ -52,9 +52,9 @@ class VolcanoApp(param.Parameterized):
             sizing_mode='stretch_width',
             show_index=False,
             theme='midnight',
-            columns=table_columns,
             hidden_columns=['Compounds ID', 'abs_fc']
         )
+        self.table.columns = table_columns
 
         # Plot pane
         self.plot_pane = pn.pane.Plotly(sizing_mode='stretch_width', min_height=900)
