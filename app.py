@@ -42,7 +42,7 @@ class VolcanoApp(param.Parameterized):
             {'field': 'Formula', 'title': 'Formula', 'headerTooltip': 'Chemical Formula'},
         ]
 
-        # Create table (scrollable, no pagination, remove unsupported param)
+        # Create table
         self.table = pn.widgets.Tabulator(
             pagination=None,
             height=800,
@@ -176,7 +176,7 @@ def main():
     #print("✅ Volcano app exported to 'volcano_app.html'")
 
     # For development:
-    pn.serve(dashboard, port=80)
+    pn.serve(dashboard, port=80, websocket_origin=['*'])
 
 if __name__ == "__main__":
     main()
