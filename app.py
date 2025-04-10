@@ -172,11 +172,11 @@ class VolcanoApp(param.Parameterized):
 def main():
     app = VolcanoApp()
     dashboard = app.panel()
-    dashboard.save("volcano_app.html", embed=True, resources='inline', title="Compound Explorer")
-    print("✅ Volcano app exported to 'volcano_app.html'")
+    #dashboard.save("volcano_app.html", embed=True, resources='inline', title="Compound Explorer")
+    #print("✅ Volcano app exported to 'volcano_app.html'")
 
     # For development:
-    pn.serve(dashboard, port=80, websocket_origin=['*'])
+    pn.serve(dashboard, port=80)
 
 if __name__ == "__main__":
     main()
