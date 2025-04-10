@@ -176,7 +176,7 @@ def main():
     print("✅ Volcano app exported to 'volcano_app.html'")
 
     # For development:
-    # pn.serve(dashboard)
+    pn.serve(dashboard)
 
 if __name__ == "__main__":
     main()
