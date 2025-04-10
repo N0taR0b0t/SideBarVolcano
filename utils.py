@@ -1,6 +1,5 @@
 # utils.py
 import pandas as pd
-#pd.set_option('future.no_silent_downcasting', True)
 import numpy as np
 import json
 import warnings
