@@ -1,0 +1,44 @@
+{
+    "ReKidney.csv": [
+        {
+            "fold_change_col": "Log2 Fold Change: (cla) / (cla_lps)",
+            "p_value_col": "P-value: (cla) / (cla_lps)",
+            "title": "Volcano Plot: (cla) / (cla_lps)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (no2-cla_lps) / (cla_lps)",
+            "p_value_col": "P-value: (no2-cla_lps) / (cla_lps)",
+            "title": "Volcano Plot: (no2-cla_lps) / (cla_lps)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (cla) / (ctrl)",
+            "p_value_col": "P-value: (cla) / (ctrl)",
+            "title": "Volcano Plot: (cla) / (ctrl)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (lps) / (ctrl)",
+            "p_value_col": "P-value: (lps) / (ctrl)",
+            "title": "Volcano Plot: (lps) / (ctrl)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (cla) / (lps)",
+            "p_value_col": "P-value: (cla) / (lps)",
+            "title": "Volcano Plot: (cla) / (lps)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (cla_lps) / (ctrl)",
+            "p_value_col": "P-value: (cla_lps) / (ctrl)",
+            "title": "Volcano Plot: (cla_lps) / (ctrl)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (no2-cla_lps) / (lps)",
+            "p_value_col": "P-value: (no2-cla_lps) / (lps)",
+            "title": "Volcano Plot: (no2-cla_lps) / (lps)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (no2-cla_lps) / (ctrl)",
+            "p_value_col": "P-value: (no2-cla_lps) / (ctrl)",
+            "title": "Volcano Plot: (no2-cla_lps) / (ctrl)"
+        }
+    ]
+}
