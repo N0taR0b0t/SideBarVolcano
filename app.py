@@ -176,7 +176,7 @@ def main():
     print("✅ Volcano app exported to 'volcano_app.html'")
 
     # For development:
-    pn.serve(dashboard)
+    pn.serve(dashboard, port=80, websocket_origin=['*'])
 
 if __name__ == "__main__":
     main()
