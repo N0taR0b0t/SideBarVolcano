@@ -38,7 +38,7 @@ class VolcanoApp(param.Parameterized):
         )
 
         # Create buttons
-        self.select_all_button = pn.widgets.Button(name="Select All", button_type="primary")
+        #self.select_all_button = pn.widgets.Button(name="Select All", button_type="primary")
         self.clear_all_button = pn.widgets.Button(name="Clear All", button_type="danger")
 
         # Define columns for the table
@@ -69,7 +69,7 @@ class VolcanoApp(param.Parameterized):
         self.comparison_select.param.watch(self._update_comparison, 'value')
         self.table.param.watch(self._update_selection, 'selection')
         self.search_input.param.watch(self._apply_filter, 'value')
-        self.select_all_button.on_click(self._select_all)
+        #self.select_all_button.on_click(self._select_all)
         self.clear_all_button.on_click(self._clear_all)
 
         # Initial update
@@ -121,8 +121,8 @@ class VolcanoApp(param.Parameterized):
         self.plot_pane.object = generate_plot(
             self.df, self.comparison, self.comparisons, selected_ids)
 
-    def _select_all(self, event):
-        self.table.selection = list(range(len(self.table.value)))
+    #def _select_all(self, event):
+    #    self.table.selection = list(range(len(self.table.value)))
 
     def _clear_all(self, event):
         self.table.selection = []
@@ -131,7 +131,7 @@ class VolcanoApp(param.Parameterized):
 
         # Button row
         button_row = pn.Row(
-            self.select_all_button,
+            #self.select_all_button,
             self.clear_all_button,
             sizing_mode='stretch_width'
         )
@@ -173,7 +173,7 @@ def notify_webhook():
         webhook_url = "https://maker.ifttt.com/trigger/sidebar/json/with/key/" + IFTTT_KEY
         print(webhook_url)
         payload = {
-            "value1": "Website deployed"
+            "value1": "Deploying Website"
         }
         headers = {
             "Content-Type": "application/json"
@@ -182,7 +182,7 @@ def notify_webhook():
         try:
             response = requests.post(webhook_url, json=payload, headers=headers)
             response.raise_for_status()
-            print("✅ IFTTT webhook triggered: Website deployed")
+            #print("✅ IFTTT webhook triggered: Website deployed")
         except requests.exceptions.RequestException as e:
             print(f"[WARN] Webhook notify failed: {e}")
             if response is not None:
