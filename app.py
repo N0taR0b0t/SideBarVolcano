@@ -160,9 +160,19 @@ class VolcanoApp(param.Parameterized):
             sizing_mode='stretch_width'
         )
 
+        ws_refresh_script = pn.pane.HTML("""
+        <script>
+        const socket = new WebSocket("ws://" + location.host + "/ws");
+        socket.onerror = function () {
+            console.warn("WebSocket error — refreshing page.");
+            location.reload();
+        };
+        </script>
+        """, width=0, height=0, sizing_mode='fixed')
+
         return pn.Row(
             control_panel,
-            main_panel,
+            pn.Column(main_panel, ws_refresh_script),
             styles={'background': '#606060'},
             sizing_mode='stretch_width',
             margin=0
