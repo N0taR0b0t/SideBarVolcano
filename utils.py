@@ -53,27 +53,30 @@ def ensure_column(df, col, default=''):
         df[col] = clean_cell_values(df[col])
     return df
 
-def load_and_prepare_data():
-    # Load data and prepare for visualization
-    distance_df = robust_load_csv('by_distance_named.csv', expected_columns={'Compounds ID', 'Calc. MW', 'Name'})
+def load_and_prepare_data(data_file, distance_file, mapping_key):
+    # Load reference ("gold") compounds
+    distance_df = robust_load_csv(distance_file, expected_columns={'Compounds ID', 'Calc. MW', 'Name'})
     distance_df = apply_fallback_names(distance_df)
     gold_ids = distance_df['Compounds ID'].dropna().astype(str).tolist()
 
-    raw_data = robust_load_csv('ReSpleen.csv')
+    # Load main data
+    raw_data = robust_load_csv(data_file)
     raw_data = apply_fallback_names(raw_data)
     raw_data = ensure_column(raw_data, 'm/z')
     raw_data = ensure_column(raw_data, 'RT [min]')
     raw_data['Compounds ID'] = raw_data['Compounds ID'].astype(str)
     raw_data['Gold'] = raw_data['Compounds ID'].isin(gold_ids)
 
-    with open("column_mapping.json") as f:
+    # Load comparison metadata from specific JSON file
+    mapping_file = mapping_key.replace(".csv", "_column_mapping.json")
+    with open(mapping_file) as f:
         mapping_data = json.load(f)
-    comparisons = mapping_data.get("ReSpleen.csv", [])
-    
-    if not comparisons:
-        raise ValueError("No comparisons found in column_mapping.json")
+    comparisons = mapping_data.get(mapping_key, [])
 
-    # Pre-compute data for all comparisons
+    if not comparisons:
+        raise ValueError(f"No comparisons found in {mapping_file} for key: {mapping_key}")
+
+    # Compute derived columns
     for entry in comparisons:
         fc_col = entry.get("fold_change_col")
         pv_col = entry.get("p_value_col")

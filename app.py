@@ -10,11 +10,13 @@ pn.extension('plotly', 'tabulator')
 class VolcanoApp(param.Parameterized):
     comparison = param.Integer(0)
 
-    def __init__(self, **params):
+    def __init__(self, data_file, distance_file, mapping_key, **params):
         super().__init__(**params)
+        self.df, self.comparisons = load_and_prepare_data(data_file, distance_file, mapping_key)
+
 
         # Load data
-        self.df, self.comparisons = load_and_prepare_data()
+        #self.df, self.comparisons = load_and_prepare_data()
 
         # Create comparison dropdown options
         self.comparison_names = [comp.get("title", f"Comparison {i+1}")
@@ -163,20 +165,25 @@ class VolcanoApp(param.Parameterized):
         return pn.Row(
             control_panel,
             main_panel,
-            styles={'background': '#303030'},
+            styles={'background': '#404040'},
             sizing_mode='stretch_width',
             margin=0
         )
 
 # Main entry point
 def main():
-    app = VolcanoApp()
-    dashboard = app.panel()
-    #dashboard.save("volcano_app.html", embed=True, resources='inline', title="Compound Explorer")
-    #print("✅ Volcano app exported to 'volcano_app.html'")
+    app1 = VolcanoApp("ReSpleen.csv", "by_distance_named.csv", "ReSpleen.csv")
+    app2 = VolcanoApp("ReKidney.csv", "ReKidney_by_distance_named.csv", "ReKidney.csv")
+    #app3 = VolcanoApp("ReLiver.csv", "ReLiver_by_distance_named.csv", "ReLiver.csv")
 
-    # For development:
-    pn.serve(dashboard, port=80, websocket_origin=['*'])
+    tabs = pn.Tabs(
+        ("Spleen", app1.panel()),
+        ("Kidney", app2.panel())
+        #,
+        #("Liver", app3.panel()),
+    )
+
+    pn.serve(tabs, port=80, websocket_origin=['*'])
 
 if __name__ == "__main__":
     main()
