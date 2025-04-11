@@ -125,11 +125,6 @@ class VolcanoApp(param.Parameterized):
         self.table.selection = []
 
     def panel(self):
-        # Custom CSS for better styling
-        custom_css = """
-        .bk-input { background-color: #5f5f5f; color: white; }
-        """
-        pn.config.raw_css.append(custom_css)
 
         # Button row
         button_row = pn.Row(
