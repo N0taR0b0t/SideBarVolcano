@@ -162,11 +162,30 @@ class VolcanoApp(param.Parameterized):
 
         ws_refresh_script = pn.pane.HTML("""
         <script>
-        const socket = new WebSocket("ws://" + location.host + "/ws");
-        socket.onerror = function () {
-            console.warn("WebSocket error — refreshing page.");
-            location.reload();
-        };
+        // Only auto-reload if Bokeh session really dies
+        const MAX_RETRIES = 3;
+        let retryCount = 0;
+
+        function checkBokehSession() {
+            // This object is injected by Bokeh/Panel itself
+            const doc = window.Bokeh && window.Bokeh.documents[0];
+            if (!doc || doc.is_idle) {
+            retryCount += 1;
+            console.warn("Panel session inactive or missing. Retry #" + retryCount);
+            if (retryCount >= MAX_RETRIES) {
+                console.warn("Max retries hit. Reloading...");
+                location.reload();
+            } else {
+                setTimeout(checkBokehSession, 3000);
+            }
+            } else {
+            // Reset if session is active
+            retryCount = 0;
+            }
+        }
+
+        // Start checks after short delay
+        setTimeout(checkBokehSession, 5000);
         </script>
         """, width=0, height=0, sizing_mode='fixed')
 
@@ -177,6 +196,8 @@ class VolcanoApp(param.Parameterized):
             sizing_mode='stretch_width',
             margin=0
         )
+        
+
         
 def notify_webhook():
     if ENV_CHECK != "DEV":
