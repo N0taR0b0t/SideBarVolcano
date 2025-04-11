@@ -1,12 +1,15 @@
 # app.py - Simplified layout with better proportions
 import os
-import panel as pn
 import param
+import requests
+import panel as pn
 from utils import load_and_prepare_data
 from volcano_plot import generate_plot
 
 # Initialize Panel extension
 pn.extension('plotly', 'tabulator')
+ENV_CHECK = os.environ.get("ENV_CHECK", "")
+IFTTT_KEY = os.environ.get("IFTTT_API_KEY", "")
 
 class VolcanoApp(param.Parameterized):
     comparison = param.Integer(0)
@@ -164,6 +167,26 @@ class VolcanoApp(param.Parameterized):
             sizing_mode='stretch_width',
             margin=0
         )
+        
+def notify_webhook():
+    if ENV_CHECK != "DEV":
+        webhook_url = "https://maker.ifttt.com/trigger/sidebar/json/with/key/" + IFTTT_KEY
+        print(webhook_url)
+        payload = {
+            "value1": "Website deployed"
+        }
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        try:
+            response = requests.post(webhook_url, json=payload, headers=headers)
+            response.raise_for_status()
+            print("✅ IFTTT webhook triggered: Website deployed")
+        except requests.exceptions.RequestException as e:
+            print(f"[WARN] Webhook notify failed: {e}")
+            if response is not None:
+                print(f"[DEBUG] Response status code: {response.status_code}")
 
 # Main entry point
 def main():
@@ -178,7 +201,7 @@ def main():
         #("Liver", app3.panel()),
     )
 
-    if (os.environ.get("ENV_CHECK", "") == "DEV"):
+    if (ENV_CHECK == "DEV"):
         port = 4603
     else:
         port = 80
@@ -186,4 +209,5 @@ def main():
     pn.serve(tabs, port=port, websocket_origin=['*'])
 
 if __name__ == "__main__":
+    notify_webhook()
     main()
