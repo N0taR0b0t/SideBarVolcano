@@ -4,6 +4,8 @@ import numpy as np
 import json
 import warnings
 
+pd.set_option('future.no_silent_downcasting', True)
+
 def clean_column_names(columns):
     return columns.str.strip().str.replace('"', '', regex=False).str.replace("'", '', regex=False)
 
@@ -11,8 +13,10 @@ def clean_cell_values(series):
     series = series.astype(object)
     series = series.where(series.notna(), '')
     series = series.astype(str)
+
     try:
-        return series.replace(r'^\s*["\']{0,2}\s*$', np.nan, regex=True).str.strip(' "\'')
+        result = series.replace(r'^\s*["\']{0,2}\s*$', np.nan, regex=True).str.strip(' "\'')
+        return result.infer_objects(copy=False)
     except AttributeError:
         return series
 
@@ -44,6 +48,7 @@ def apply_fallback_names(df):
         else:
             df[col] = clean_cell_values(df[col])
     df['Name'] = df['Name'].fillna(df['Formula']).fillna(df['Calc. MW'])
+    df['Formula'] = df['Formula'].fillna('---')
     return df
 
 def ensure_column(df, col, default=''):
@@ -65,7 +70,9 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
     raw_data = ensure_column(raw_data, 'm/z')
     raw_data = ensure_column(raw_data, 'RT [min]')
     raw_data['Compounds ID'] = raw_data['Compounds ID'].astype(str)
-    raw_data['Gold'] = raw_data['Compounds ID'].isin(gold_ids)
+
+    # Add 'Gold' column using concat to avoid fragmentation
+    raw_data = pd.concat([raw_data, pd.DataFrame({'Gold': raw_data['Compounds ID'].isin(gold_ids)})], axis=1).copy()
 
     # Load comparison metadata from specific JSON file
     mapping_file = mapping_key.replace(".csv", "_column_mapping.json")
@@ -76,7 +83,7 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
     if not comparisons:
         raise ValueError(f"No comparisons found in {mapping_file} for key: {mapping_key}")
 
-    # Compute derived columns
+    # Compute derived columns (efficiently)
     for entry in comparisons:
         fc_col = entry.get("fold_change_col")
         pv_col = entry.get("p_value_col")
@@ -84,8 +91,13 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
         if fc_col in raw_data.columns and pv_col in raw_data.columns:
             raw_data[fc_col] = pd.to_numeric(clean_cell_values(raw_data[fc_col]), errors='coerce')
             raw_data[pv_col] = pd.to_numeric(clean_cell_values(raw_data[pv_col]), errors='coerce')
-            raw_data[f'-Log10({pv_col})'] = -np.log10(raw_data[pv_col])
-            raw_data[f'{fc_col}_sig_up'] = (raw_data[fc_col] > 0.5) & (raw_data[pv_col] < 0.05)
-            raw_data[f'{fc_col}_sig_down'] = (raw_data[fc_col] < -0.5) & (raw_data[pv_col] < 0.05)
+
+            new_cols = pd.DataFrame({
+                f'-Log10({pv_col})': -np.log10(raw_data[pv_col]),
+                f'{fc_col}_sig_up': (raw_data[fc_col] > 0.5) & (raw_data[pv_col] < 0.05),
+                f'{fc_col}_sig_down': (raw_data[fc_col] < -0.5) & (raw_data[pv_col] < 0.05),
+            })
+
+            raw_data = pd.concat([raw_data, new_cols], axis=1).copy()
 
     return raw_data, comparisons

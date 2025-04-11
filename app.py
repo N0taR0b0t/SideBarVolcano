@@ -1,4 +1,5 @@
 # app.py - Simplified layout with better proportions
+import os
 import panel as pn
 import param
 from utils import load_and_prepare_data
@@ -126,7 +127,6 @@ class VolcanoApp(param.Parameterized):
     def panel(self):
         # Custom CSS for better styling
         custom_css = """
-        .custom-panel h2 { color: white; font-weight: bold; }
         .bk-input { background-color: #5f5f5f; color: white; }
         """
         pn.config.raw_css.append(custom_css)
@@ -145,7 +145,7 @@ class VolcanoApp(param.Parameterized):
             self.search_input,
             button_row,
             self.table,
-            styles={'background': '#404040'},
+            styles={'background': '#606060'},
             css_classes=['custom-panel'],
             width=450,
             margin=0
@@ -155,7 +155,7 @@ class VolcanoApp(param.Parameterized):
         main_panel = pn.Column(
             "## Volcano Plot",
             self.plot_pane,
-            styles={'background': '#404040'},
+            styles={'background': '#606060'},
             css_classes=['custom-panel'],
             min_width=700,
             margin=0,
@@ -165,7 +165,7 @@ class VolcanoApp(param.Parameterized):
         return pn.Row(
             control_panel,
             main_panel,
-            styles={'background': '#404040'},
+            styles={'background': '#606060'},
             sizing_mode='stretch_width',
             margin=0
         )
@@ -183,7 +183,12 @@ def main():
         #("Liver", app3.panel()),
     )
 
-    pn.serve(tabs, port=80, websocket_origin=['*'])
+    if (os.environ.get("ENV_CHECK", "") == "DEV"):
+        port = 4603
+    else:
+        port = 80
+    
+    pn.serve(tabs, port=port, websocket_origin=['*'])
 
 if __name__ == "__main__":
     main()
