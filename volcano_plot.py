@@ -16,7 +16,7 @@ def generate_plot(df, comparison_idx, comparisons, selected_ids=None):
     if selected_ids is None or len(selected_ids) == 0:
         opacity = np.ones(len(df))
     else:
-        opacity = np.where(df['Compounds ID'].isin(selected_ids), 1.0, 0.1)
+        opacity = np.where(df['Compounds ID'].isin(selected_ids), 1.0, 0.005)
 
     # Determine colors
     color_map = np.where(df['Gold'], 'gold',
