@@ -42,12 +42,12 @@ def robust_load_csv(filepath, expected_columns=None):
     return df
 
 def apply_fallback_names(df):
-    for col in ['Name', 'Formula', 'Calc. MW']:
+    for col in ['Name', 'Formula', 'm/z']:
         if col not in df.columns:
             df[col] = np.nan
         else:
             df[col] = clean_cell_values(df[col])
-    df['Name'] = df['Name'].fillna(df['Formula']).fillna(df['Calc. MW'])
+    df['Name'] = df['Name'].fillna(df['Formula']).fillna(df['m/z'])  # <- updated fallback chain
     df['Formula'] = df['Formula'].fillna('---')
     return df
 

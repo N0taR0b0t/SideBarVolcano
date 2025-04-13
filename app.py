@@ -39,7 +39,7 @@ class VolcanoApp(param.Parameterized):
 
         # Create buttons
         #self.select_all_button = pn.widgets.Button(name="Select All", button_type="primary")
-        self.clear_all_button = pn.widgets.Button(name="Clear Checked", button_type="danger")
+        self.clear_all_button = pn.widgets.Button(name="Checkbox Clear", button_type="danger")
         self.reset_button = pn.widgets.Button(
             name="Reset Page", 
             button_type="danger",
