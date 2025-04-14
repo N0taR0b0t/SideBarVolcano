@@ -41,7 +41,7 @@ class VolcanoApp(param.Parameterized):
         #self.select_all_button = pn.widgets.Button(name="Select All", button_type="primary")
         self.clear_all_button = pn.widgets.Button(name="Checkbox Clear", button_type="danger")
         self.reset_button = pn.widgets.Button(
-            name="Reset Page", 
+            name="Reload Page", 
             button_type="danger",
             width=100,
             height=30,
@@ -196,7 +196,6 @@ class VolcanoApp(param.Parameterized):
 def notify_webhook():
         if ENV_CHECK != "DEV":
             webhook_url = "https://maker.ifttt.com/trigger/sidebar/json/with/key/" + IFTTT_KEY
-            print(webhook_url)
             payload = {
                 "value1": "Deploying Website"
             }
@@ -217,13 +216,12 @@ def notify_webhook():
 def main():
     app1 = VolcanoApp("ReSpleen.csv", "by_distance_named.csv", "ReSpleen.csv")
     app2 = VolcanoApp("ReKidney.csv", "ReKidney_by_distance_named.csv", "ReKidney.csv")
-    #app3 = VolcanoApp("ReLiver.csv", "ReLiver_by_distance_named.csv", "ReLiver.csv")
+    app3 = VolcanoApp("ReLiver.csv", "ReLiver_by_distance_named.csv", "ReLiver.csv")
 
     tabs = pn.Tabs(
         ("Spleen", app1.panel()),
-        ("Kidney", app2.panel())
-        #,
-        #("Liver", app3.panel()),
+        ("Kidney", app2.panel()),
+        ("Liver", app3.panel()),
     )
 
     if (ENV_CHECK == "DEV"):

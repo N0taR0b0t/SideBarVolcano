@@ -1,0 +1,29 @@
+{
+    "ReLiver.csv": [
+        {
+            "fold_change_col": "Log2 Fold Change: (cla) / (ctrl)",
+            "p_value_col": "P-value: (cla) / (ctrl)",
+            "title": "Volcano Plot: (cla) / (ctrl)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (cla_lps) / (lps)",
+            "p_value_col": "P-value: (cla_lps) / (lps)",
+            "title": "Volcano Plot: (cla_lps) / (lps)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (no2-cla_lps) / (ctrl)",
+            "p_value_col": "P-value: (no2-cla_lps) / (ctrl)",
+            "title": "Volcano Plot: (no2-cla_lps) / (ctrl)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (no2-cla_lps) / (lps)",
+            "p_value_col": "P-value: (no2-cla_lps) / (lps)",
+            "title": "Volcano Plot: (no2-cla_lps) / (lps)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (lps) / (ctrl)",
+            "p_value_col": "P-value: (lps) / (ctrl)",
+            "title": "Volcano Plot: (lps) / (ctrl)"
+        }
+    ]
+}

@@ -21,7 +21,7 @@ def main():
         base_name = os.path.splitext(csv_file)[0]
         mapping_file = f"{base_name}_column_mapping.json"
         distance_file = f"{base_name}_by_distance_named.csv"
-        plot_file = f"{base_name}_volcano_plot.html"
+        #plot_file = f"{base_name}_volcano_plot.html"
 
         # Step 1: Generate mapping
         mapping = extract_column_mapping(csv_file)
