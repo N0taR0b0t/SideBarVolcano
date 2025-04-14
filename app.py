@@ -55,7 +55,7 @@ class VolcanoApp(param.Parameterized):
         )
 
         # Define columns for the table
-        table_columns = [
+        self.table_columns = [
             {'field': 'm/z', 'title': 'm/z', 'headerTooltip': 'm/z value'},
             {'field': 'RT [min]', 'title': 'RT [min]', 'headerTooltip': 'Retention Time'},
             {'field': 'Formula', 'title': 'Formula', 'headerTooltip': 'Chemical Formula'},
@@ -73,7 +73,7 @@ class VolcanoApp(param.Parameterized):
             theme='midnight',
             hidden_columns=['Compounds ID', 'abs_fc']
         )
-        self.table.columns = table_columns
+        self.table.columns = self.table_columns
 
         # Plot pane
         self.plot_pane = pn.pane.Plotly(sizing_mode='stretch_width', min_height=900)
@@ -85,7 +85,7 @@ class VolcanoApp(param.Parameterized):
         #self.select_all_button.on_click(self._select_all)
         self.clear_all_button.on_click(self._clear_all)
         self.reset_button.on_click(self._reset_app)
-        
+      
         # Initial update
         self._update_comparison(None)
 
@@ -94,14 +94,32 @@ class VolcanoApp(param.Parameterized):
         self.comparison = current_comp_idx
 
         fc_col = self.comparisons[current_comp_idx].get("fold_change_col")
+        pv_col = self.comparisons[current_comp_idx].get("p_value_col")
 
         # Prepare table data - include hidden columns for functionality
         table_data = self.df[[
-            'Compounds ID', 'm/z', 'RT [min]', 'Formula', fc_col,
+            'Compounds ID', 'm/z', 'RT [min]', 'Formula', fc_col, pv_col,
         ]].dropna(subset=[fc_col]).copy()
 
+        # Rename the columns in the dataframe
+        table_data = table_data.rename(columns={
+            'RT [min]': 'RT',
+            pv_col: 'P-val',
+            fc_col: 'Log2'
+        })
+
+        # Update table columns with the renamed columns
+        self.table_columns = [
+            {'field': 'm/z', 'title': 'm/z', 'headerTooltip': 'm/z value'},
+            {'field': 'RT [min]', 'title': 'RT [min]', 'headerTooltip': 'Retention Time'},
+            {'field': 'Formula', 'title': 'Formula', 'headerTooltip': 'Chemical Formula'},
+            {'field': 'P-val', 'title': 'P-val', 'headerTooltip': 'P-value'},
+            {'field': 'Log2', 'title': 'Log2', 'headerTooltip': 'Log2 Fold Change'},
+        ]
+        self.table.columns = self.table_columns
+
         # Sort by fold change magnitude
-        table_data['abs_fc'] = abs(table_data[fc_col])
+        table_data['abs_fc'] = abs(table_data['Log2'])
         table_data = table_data.sort_values('abs_fc', ascending=False)
 
         # Store the full dataset for filtering
@@ -112,7 +130,7 @@ class VolcanoApp(param.Parameterized):
         self.table.value = table_data
         self.table.selection = []
 
-        # Update plot
+        # Update plot - need to use original column names for the plot
         self.plot_pane.object = generate_plot(self.df, current_comp_idx, self.comparisons)
 
     def _apply_filter(self, event):
@@ -137,10 +155,10 @@ class VolcanoApp(param.Parameterized):
 
     #def _select_all(self, event):
     #    self.table.selection = list(range(len(self.table.value)))
-    
+  
     def _clear_all(self, event):
         self.table.selection = []
-    
+  
     def _reset_app(self, event):
         # Reset search filter
         self.search_input.value = ''
@@ -150,7 +168,7 @@ class VolcanoApp(param.Parameterized):
         self.table.selection = []
         # Reload table data from the original dataframe and update plot
         self._update_comparison(None)
-    
+  
     def panel(self):
 
         # Button row
@@ -170,7 +188,7 @@ class VolcanoApp(param.Parameterized):
             self.table,
             styles={'background': '#606060'},
             css_classes=['custom-panel'],
-            width=450,
+            width=550,
             margin=0
         )
 
@@ -180,7 +198,7 @@ class VolcanoApp(param.Parameterized):
             self.plot_pane,
             styles={'background': '#606060'},
             css_classes=['custom-panel'],
-            min_width=700,
+            min_width=600,
             margin=0,
             sizing_mode='stretch_width'
         )
@@ -228,7 +246,7 @@ def main():
         port = 4603
     else:
         port = 80
-    
+  
     pn.serve(tabs, port=port, websocket_origin=['*'])
 
 if __name__ == "__main__":
