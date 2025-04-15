@@ -105,7 +105,7 @@ class VolcanoApp(param.Parameterized):
         table_data = table_data.rename(columns={
             'RT [min]': 'RT',
             pv_col: 'P-val',
-            fc_col: 'Log2'
+            fc_col: 'Log2 Fold'
         })
 
         # Update table columns with the renamed columns
@@ -114,12 +114,12 @@ class VolcanoApp(param.Parameterized):
             {'field': 'RT [min]', 'title': 'RT [min]', 'headerTooltip': 'Retention Time'},
             {'field': 'Formula', 'title': 'Formula', 'headerTooltip': 'Chemical Formula'},
             {'field': 'P-val', 'title': 'P-val', 'headerTooltip': 'P-value'},
-            {'field': 'Log2', 'title': 'Log2', 'headerTooltip': 'Log2 Fold Change'},
+            {'field': 'Log2 Fold', 'title': 'Log2 Fold', 'headerTooltip': 'Log2 Fold Change'},
         ]
         self.table.columns = self.table_columns
 
         # Sort by fold change magnitude
-        table_data['abs_fc'] = abs(table_data['Log2'])
+        table_data['abs_fc'] = abs(table_data['Log2 Fold'])
         table_data = table_data.sort_values('abs_fc', ascending=False)
 
         # Store the full dataset for filtering
@@ -188,7 +188,7 @@ class VolcanoApp(param.Parameterized):
             self.table,
             styles={'background': '#606060'},
             css_classes=['custom-panel'],
-            width=550,
+            width=600,
             margin=0
         )
 
@@ -198,7 +198,7 @@ class VolcanoApp(param.Parameterized):
             self.plot_pane,
             styles={'background': '#606060'},
             css_classes=['custom-panel'],
-            min_width=600,
+            min_width=550,
             margin=0,
             sizing_mode='stretch_width'
         )

@@ -28,7 +28,8 @@ def generate_plot(df, comparison_idx, comparisons, selected_ids=None):
         "Name: " + df['Name'].astype(str) + "<br>" +
         "Formula: " + df['Formula'].astype(str) + "<br>" +
         "m/z: " + df['m/z'].astype(str) + "<br>" +
-        "RT [min]: " + df['RT [min]'].astype(str)
+        "RT [min]: " + df['RT [min]'].astype(str) + "<br>" +
+        "P-value: " + df[pv_col].apply(lambda x: f"{x:.2e}")
     )
 
     # Add main scatter plot
