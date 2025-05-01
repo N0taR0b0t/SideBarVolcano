@@ -18,5 +18,3 @@ Three full Plotly figures are instantiated and retained simultaneously.
 If the VolcanoApp is tabbed via pn.Tabs, each app and its corresponding figure remains in memory, even if not visible.
 Panel's live server (via pn.serve) does not automatically prune hidden tabs or reclaim their memory.
 Plotly figures are large — they embed full hover text, color arrays, shape objects, etc.
-# The Precise Issue
-You're replacing large Plotly objects in Panel's reactive layout without explicitly dereferencing the old ones, causing retained memory (and possibly duplicate objects in Bokeh’s document model) that aren't garbage collected — leading to slow, continuous memory growth.
