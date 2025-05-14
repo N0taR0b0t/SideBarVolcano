@@ -1,4 +1,5 @@
-# Root Cause of the Memory Leak
+## Cause of Slow Growing Memory Leak
+# Status: IIABDFI
 The memory leak is caused by repeated creation and assignment of large Plotly Figure objects to the self.plot_pane.object attribute within each VolcanoApp, without proper cleanup or reuse.
 
 Each call to _update_comparison() calls generate_plot(...), which creates a brand-new Plotly Figure.
