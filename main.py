@@ -1,7 +1,9 @@
 import os
+import csv
+import sys
 from column_mapper import extract_column_mapping, save_mapping
 from distCalc import compute_compound_distances
-#from ModularVolcanos import generate_volcano_plot
+# from ModularVolcanos import generate_volcano_plot
 
 def is_valid_csv(filename):
     return (
@@ -10,8 +12,26 @@ def is_valid_csv(filename):
         os.path.splitext(filename)[0].count("_") <= 1
     )
 
+def is_truly_csv(filepath):
+    """Check if the file is actually comma-delimited."""
+    try:
+        with open(filepath, 'r', newline='', encoding='latin1') as file:
+            sample = file.read(4096)
+            dialect = csv.Sniffer().sniff(sample, delimiters=[',', '\t'])
+            return dialect.delimiter == ','
+    except Exception as e:
+        print(f"⚠️ Could not determine delimiter for file '{filepath}': {e}")
+        return False
+
 def main():
     csv_files = [f for f in os.listdir(".") if is_valid_csv(f)]
+
+    # Check if all files are truly comma-delimited
+    for csv_file in csv_files:
+        if not is_truly_csv(csv_file):
+            print(f"WARNING: File '{csv_file}' is NOT comma-delimited. It may be a TSV!")
+            print("Please correct the delimiter or file format before proceeding.")
+            sys.exit(1)
 
     if not csv_files:
         print("❌ No valid CSV files found in the current directory.")
