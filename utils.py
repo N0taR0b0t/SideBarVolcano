@@ -58,10 +58,12 @@ def ensure_column(df, col, default=''):
     return df
 
 def load_and_prepare_data(data_file, distance_file, mapping_key):
+    print(f"\n[DEBUG] Loading data for: {data_file}")
+    
     # Load reference ("gold") compounds
     distance_df = robust_load_csv(distance_file, expected_columns={'Compounds ID', 'Calc. MW', 'Name'})
     distance_df = apply_fallback_names(distance_df)
-    gold_ids = distance_df['Compounds ID'].dropna().astype(str).tolist()
+    gold_ids = distance_df['Compounds ID'].dropna().astype(str).head(25).tolist()
 
     # Load main data
     raw_data = robust_load_csv(data_file)
@@ -70,10 +72,10 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
     raw_data = ensure_column(raw_data, 'RT [min]')
     raw_data['Compounds ID'] = raw_data['Compounds ID'].astype(str)
 
-    # Add 'Gold' column using concat to avoid fragmentation
+    # Add 'Gold' column
     raw_data = pd.concat([raw_data, pd.DataFrame({'Gold': raw_data['Compounds ID'].isin(gold_ids)})], axis=1).copy()
 
-    # Load comparison metadata from specific JSON file
+    # Load column mapping
     mapping_file = mapping_key.replace(".csv", "_column_mapping.json")
     with open(mapping_file) as f:
         mapping_data = json.load(f)
@@ -82,14 +84,21 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
     if not comparisons:
         raise ValueError(f"No comparisons found in {mapping_file} for key: {mapping_key}")
 
-    # Compute derived columns (efficiently)
-    for entry in comparisons:
+    # Compute derived columns
+    for i, entry in enumerate(comparisons):
         fc_col = entry.get("fold_change_col")
         pv_col = entry.get("p_value_col")
+        print(f"[DEBUG] Comparison {i+1}: fold_change_col = '{fc_col}', p_value_col = '{pv_col}'")
 
         if fc_col in raw_data.columns and pv_col in raw_data.columns:
             raw_data[fc_col] = pd.to_numeric(clean_cell_values(raw_data[fc_col]), errors='coerce')
             raw_data[pv_col] = pd.to_numeric(clean_cell_values(raw_data[pv_col]), errors='coerce')
+
+            # Diagnostic output
+            valid_pvals = raw_data[pv_col].dropna()
+            num_valid = len(valid_pvals)
+            num_below_thresh = (valid_pvals < 0.05).sum()
+            print(f"[DEBUG] {num_valid} valid p-values; {num_below_thresh} < 0.05")
 
             new_cols = pd.DataFrame({
                 f'-Log10({pv_col})': -np.log10(raw_data[pv_col]),
@@ -97,6 +106,11 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
                 f'{fc_col}_sig_down': (raw_data[fc_col] < -0.5) & (raw_data[pv_col] < 0.05),
             })
 
-            raw_data = pd.concat([raw_data, new_cols], axis=1).copy()
+            print(f"[DEBUG] Added derived cols: -Log10({pv_col}), {fc_col}_sig_up, {fc_col}_sig_down")
 
+            raw_data = pd.concat([raw_data, new_cols], axis=1).copy()
+        else:
+            print(f"[WARN] Missing fold_change_col or p_value_col in data: {fc_col}, {pv_col}")
+
+    print("[DEBUG] Data load complete.\n")
     return raw_data, comparisons

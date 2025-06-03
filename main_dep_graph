@@ -1,0 +1,9 @@
+digraph {
+	"main.py"
+	"main.py" -> "column_mapper.py"
+	"column_mapper.py"
+	"main.py" -> "distCalc.py"
+	"distCalc.py"
+	"main.py" -> "ModularVolcanos.py"
+	"ModularVolcanos.py"
+}

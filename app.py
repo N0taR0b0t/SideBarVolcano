@@ -1,254 +1,239 @@
-# app.py - Simplified layout with better proportions
+# main.py  ──────────────────────────────────────────────────────────────
+# Extended version of the original app.py
+# • Adds two top-level sections:  H Data  and  F Data
+# • Each section contains Spleen, Kidney, Liver sub-tabs
+# • Uses lazy construction to avoid loading data until a tab is opened
+
 import os
 import param
 import requests
 import panel as pn
+
 from utils import load_and_prepare_data
 from volcano_plot import generate_plot
 
-# Initialize Panel extension
-pn.extension('plotly', 'tabulator')
-ENV_CHECK = os.environ.get("ENV_CHECK", "")
-IFTTT_KEY = os.environ.get("IFTTT_API_KEY", "")
+# ────────────────────────────── Panel setup ───────────────────────────
+pn.extension("plotly", "tabulator")  # single extension call keeps memory tight
 
+ENV_CHECK = os.environ.get("ENV_CHECK", "")          # "DEV" for local dev
+IFTTT_KEY = os.environ.get("IFTTT_API_KEY", "")      # optional deploy ping
+
+# ────────────────────────── Core interactive class ────────────────────
 class VolcanoApp(param.Parameterized):
+    """Interactive compound explorer + volcano plot."""
     comparison = param.Integer(0)
 
-    def __init__(self, data_file, distance_file, mapping_key, **params):
+    def __init__(self, data_file: str, distance_file: str, mapping_key: str, **params):
         super().__init__(**params)
-        self.df, self.comparisons = load_and_prepare_data(data_file, distance_file, mapping_key)
 
+        # Lazy-load and preprocess data for the chosen organ/dataset group
+        self.df, self.comparisons = load_and_prepare_data(
+            data_file, distance_file, mapping_key
+        )
 
-        # Load data
-        #self.df, self.comparisons = load_and_prepare_data()
-
-        # Create comparison dropdown options
-        self.comparison_names = [comp.get("title", f"Comparison {i+1}")
-                                 for i, comp in enumerate(self.comparisons)]
-
-        # Create widgets
+        # Build widgets
+        self.comparison_names = [
+            comp.get("title", f"Comparison {i+1}") for i, comp in enumerate(self.comparisons)
+        ]
         self.comparison_select = pn.widgets.Select(
-            name='Comparison',
-            options=dict(zip(self.comparison_names, range(len(self.comparison_names))))
+            name="Comparison",
+            options=dict(zip(self.comparison_names, range(len(self.comparison_names)))),
         )
+        self.search_input = pn.widgets.TextInput(placeholder="Search m/z…", name="Search")
 
-        # Create search bar
-        self.search_input = pn.widgets.TextInput(
-            placeholder='Search m/z...', name='Search'
-        )
-
-        # Create buttons
-        #self.select_all_button = pn.widgets.Button(name="Select All", button_type="primary")
         self.clear_all_button = pn.widgets.Button(name="Checkbox Clear", button_type="danger")
         self.reset_button = pn.widgets.Button(
-            name="Reload Page", 
+            name="Reload Page",
             button_type="danger",
             width=100,
             height=30,
             styles={
-                'background': 'red',
-                'color': 'white',
-                'font-size': '8px',
-                'font-weight': 'bold',
-                'border-radius': '4px'
-            }
+                "background": "red",
+                "color": "white",
+                "font-size": "8px",
+                "font-weight": "bold",
+                "border-radius": "4px",
+            },
         )
 
-        # Define columns for the table
         self.table_columns = [
-            {'field': 'm/z', 'title': 'm/z', 'headerTooltip': 'm/z value'},
-            {'field': 'RT [min]', 'title': 'RT [min]', 'headerTooltip': 'Retention Time'},
-            {'field': 'Formula', 'title': 'Formula', 'headerTooltip': 'Chemical Formula'},
+            {"field": "m/z", "title": "m/z", "headerTooltip": "m/z value"},
+            {"field": "RT [min]", "title": "RT [min]", "headerTooltip": "Retention time"},
+            {"field": "Formula", "title": "Formula", "headerTooltip": "Chemical formula"},
         ]
-
-        # Create table
         self.table = pn.widgets.Tabulator(
             pagination=None,
             height=800,
-            selectable='checkbox',
-            header_align='center',
-            layout='fit_columns',
-            sizing_mode='stretch_width',
+            selectable="checkbox",
+            header_align="center",
+            layout="fit_columns",
+            sizing_mode="stretch_width",
             show_index=False,
-            theme='midnight',
-            hidden_columns=['Compounds ID', 'abs_fc']
+            theme="midnight",
+            hidden_columns=["Compounds ID", "abs_fc"],
         )
         self.table.columns = self.table_columns
 
-        # Plot pane
-        self.plot_pane = pn.pane.Plotly(sizing_mode='stretch_width', min_height=900)
+        self.plot_pane = pn.pane.Plotly(sizing_mode="stretch_width", min_height=900)
 
-        # Set up callbacks
-        self.comparison_select.param.watch(self._update_comparison, 'value')
-        self.table.param.watch(self._update_selection, 'selection')
-        self.search_input.param.watch(self._apply_filter, 'value')
-        #self.select_all_button.on_click(self._select_all)
+        # Wire callbacks
+        self.comparison_select.param.watch(self._update_comparison, "value")
+        self.table.param.watch(self._update_selection, "selection")
+        self.search_input.param.watch(self._apply_filter, "value")
         self.clear_all_button.on_click(self._clear_all)
         self.reset_button.on_click(self._reset_app)
-      
-        # Initial update
+
+        # First render
         self._update_comparison(None)
 
-    def _update_comparison(self, event):
-        current_comp_idx = self.comparison_select.value
-        self.comparison = current_comp_idx
+    # ─────────── Callbacks ───────────
+    def _update_comparison(self, _):
+        idx = self.comparison_select.value
+        self.comparison = idx
 
-        fc_col = self.comparisons[current_comp_idx].get("fold_change_col")
-        pv_col = self.comparisons[current_comp_idx].get("p_value_col")
+        fc_col = self.comparisons[idx]["fold_change_col"]
+        pv_col = self.comparisons[idx]["p_value_col"]
 
-        # Prepare table data - include hidden columns for functionality
-        table_data = self.df[[
-            'Compounds ID', 'm/z', 'RT [min]', 'Formula', fc_col, pv_col,
-        ]].dropna(subset=[fc_col]).copy()
+        table_data = (
+            self.df[["Compounds ID", "m/z", "RT [min]", "Formula", fc_col, pv_col]]
+            .dropna(subset=[fc_col])
+            .copy()
+            .rename(
+                columns={
+                    "RT [min]": "RT",
+                    pv_col: "P-val",
+                    fc_col: "Log2 Fold",
+                }
+            )
+        )
+        table_data["abs_fc"] = table_data["Log2 Fold"].abs()
+        table_data = table_data.sort_values("abs_fc", ascending=False)
 
-        # Rename the columns in the dataframe
-        table_data = table_data.rename(columns={
-            'RT [min]': 'RT',
-            pv_col: 'P-val',
-            fc_col: 'Log2 Fold'
-        })
-
-        # Update table columns with the renamed columns
-        self.table_columns = [
-            {'field': 'm/z', 'title': 'm/z', 'headerTooltip': 'm/z value'},
-            {'field': 'RT [min]', 'title': 'RT [min]', 'headerTooltip': 'Retention Time'},
-            {'field': 'Formula', 'title': 'Formula', 'headerTooltip': 'Chemical Formula'},
-            {'field': 'P-val', 'title': 'P-val', 'headerTooltip': 'P-value'},
-            {'field': 'Log2 Fold', 'title': 'Log2 Fold', 'headerTooltip': 'Log2 Fold Change'},
-        ]
-        self.table.columns = self.table_columns
-
-        # Sort by fold change magnitude
-        table_data['abs_fc'] = abs(table_data['Log2 Fold'])
-        table_data = table_data.sort_values('abs_fc', ascending=False)
-
-        # Store the full dataset for filtering
-        self.df_filtered = table_data
-
-        # Reset search filter
-        self.search_input.value = ''
+        self.df_filtered = table_data            # cache for search
+        self.search_input.value = ""             # clear search bar
         self.table.value = table_data
-        self.table.selection = []
+        self.table.selection = []                # clear any checks
 
-        # Update plot - need to use original column names for the plot
-        self.plot_pane.object = generate_plot(self.df, current_comp_idx, self.comparisons)
+        self.plot_pane.object = generate_plot(self.df, idx, self.comparisons)
+
+        # Update visible columns once (keeps header tool-tips)
+        self.table.columns = [
+            {"field": "m/z", "title": "m/z", "headerTooltip": "m/z value"},
+            {"field": "RT", "title": "RT [min]", "headerTooltip": "Retention time"},
+            {"field": "Formula", "title": "Formula", "headerTooltip": "Chemical formula"},
+            {"field": "P-val", "title": "P-val", "headerTooltip": "P-value"},
+            {"field": "Log2 Fold", "title": "Log2 Fold", "headerTooltip": "Log2 fold-change"},
+        ]
 
     def _apply_filter(self, event):
         query = event.new.strip()
-        if not query:
-            self.table.value = self.df_filtered
-            return
-
-        # Filter only the 'm/z' column
-        mask = self.df_filtered['m/z'].astype(str).str.contains(query)
-        self.table.value = self.df_filtered[mask]
-
-    def _update_selection(self, event):
-        selected_ids = []
-        if self.table.selection:
-            selected_rows = [self.table.value.iloc[i] for i in self.table.selection]
-            selected_ids = [str(row['Compounds ID']) for row in selected_rows]
-
-        # Update plot with selection
-        self.plot_pane.object = generate_plot(
-            self.df, self.comparison, self.comparisons, selected_ids)
-
-    #def _select_all(self, event):
-    #    self.table.selection = list(range(len(self.table.value)))
-  
-    def _clear_all(self, event):
-        self.table.selection = []
-  
-    def _reset_app(self, event):
-        # Reset search filter
-        self.search_input.value = ''
-        # Reset comparison select to default
-        self.comparison_select.value = 0
-        # Clear table selection
-        self.table.selection = []
-        # Reload table data from the original dataframe and update plot
-        self._update_comparison(None)
-  
-    def panel(self):
-
-        # Button row
-        button_row = pn.Row(
-            #self.select_all_button,
-            self.clear_all_button,
-            self.reset_button,
-            sizing_mode='stretch_width'
+        self.table.value = (
+            self.df_filtered if not query else self.df_filtered[self.df_filtered["m/z"].astype(str).str.contains(query)]
         )
 
-        # Control panel with title, dropdown, search bar, buttons and table
+    def _update_selection(self, _):
+        selected_ids = []
+        if self.table.selection:
+            sel_rows = [self.table.value.iloc[i] for i in self.table.selection]
+            selected_ids = [str(row["Compounds ID"]) for row in sel_rows]
+
+        self.plot_pane.object = generate_plot(
+            self.df, self.comparison, self.comparisons, selected_ids
+        )
+
+    def _clear_all(self, _):        # quick de-select button
+        self.table.selection = []
+
+    def _reset_app(self, _):        # reload current organ
+        self.search_input.value = ""
+        self.comparison_select.value = 0
+        self.table.selection = []
+        self._update_comparison(None)
+
+    # ─────────── Layout builder ───────────
+    def panel(self):
+        button_row = pn.Row(
+            self.clear_all_button, self.reset_button, sizing_mode="stretch_width"
+        )
+
         control_panel = pn.Column(
             "## Compound Explorer",
             self.comparison_select,
             self.search_input,
             button_row,
             self.table,
-            styles={'background': '#606060'},
-            css_classes=['custom-panel'],
+            styles={"background": "#606060"},
             width=600,
-            margin=0
+            margin=0,
         )
 
-        # Main panel with plot
         main_panel = pn.Column(
             "## Volcano Plot",
             self.plot_pane,
-            styles={'background': '#606060'},
-            css_classes=['custom-panel'],
+            styles={"background": "#606060"},
             min_width=550,
             margin=0,
-            sizing_mode='stretch_width'
+            sizing_mode="stretch_width",
         )
 
         return pn.Row(
             control_panel,
             main_panel,
-            styles={'background': '#606060'},
-            sizing_mode='stretch_width',
-            margin=0
+            styles={"background": "#606060"},
+            sizing_mode="stretch_width",
+            margin=0,
         )
 
-def notify_webhook():
-        if ENV_CHECK != "DEV":
-            webhook_url = "https://maker.ifttt.com/trigger/sidebar/json/with/key/" + IFTTT_KEY
-            payload = {
-                "value1": "Deploying Website"
-            }
-            headers = {
-                "Content-Type": "application/json"
-            }
+# ───────────────────────────── Deploy helper ───────────────────────────
+def notify_webhook() -> None:
+    """Optional IFTTT ping when deploying in prod."""
+    if ENV_CHECK != "DEV" and IFTTT_KEY:
+        webhook_url = f"https://maker.ifttt.com/trigger/sidebar/json/with/key/{IFTTT_KEY}"
+        try:
+            requests.post(webhook_url, json={"value1": "Deploying Website"}, timeout=4).raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            # Print but don’t block startup
+            print(f"[WARN] IFTTT webhook failed: {exc}")
 
-            try:
-                response = requests.post(webhook_url, json=payload, headers=headers)
-                response.raise_for_status()
-                #print("✅ IFTTT webhook triggered: Website deployed")
-            except requests.exceptions.RequestException as e:
-                print(f"[WARN] Webhook notify failed: {e}")
-                if response is not None:
-                    print(f"[DEBUG] Response status code: {response.status_code}")
+# ────────────────────────── Helper for tab groups ──────────────────────
+def _organ_tabs(prefix: str) -> pn.Tabs:
+    """
+    Build inner Tabs (Spleen/Kidney/Liver) for either H Data or F Data.
 
-# Main entry point
-def main():
-    app1 = VolcanoApp("ReSpleen.csv", "by_distance_named.csv", "ReSpleen.csv")
-    app2 = VolcanoApp("ReKidney.csv", "ReKidney_by_distance_named.csv", "ReKidney.csv")
-    app3 = VolcanoApp("ReLiver.csv", "ReLiver_by_distance_named.csv", "ReLiver.csv")
-
-    tabs = pn.Tabs(
-        ("Spleen", app1.panel()),
-        ("Kidney", app2.panel()),
-        ("Liver", app3.panel()),
+    Parameters
+    ----------
+    prefix : str
+        ""Re"  → ReSpleen.csv, ReSpleen_by_distance_named.csv, …
+        "F_Re" → F_ReSpleen.csv, F_ReSpleen_by_distance_named.csv, …
+    """
+    make_panel = lambda organ: pn.panel(
+        lambda: VolcanoApp(
+            f"{prefix}{organ}.csv",
+            f"{prefix}{organ}_by_distance_named.csv",
+            f"{prefix}{organ}.csv",
+        ).panel()
     )
 
-    if (ENV_CHECK == "DEV"):
-        port = 4603
-    else:
-        port = 80
-  
-    pn.serve(tabs, port=port, websocket_origin=['*'])
+    return pn.Tabs(
+        ("Spleen", make_panel("Spleen")),
+        ("Kidney", make_panel("Kidney")),
+        ("Liver",  make_panel("Liver")),
+        dynamic=True,
+    )
 
+# ──────────────────────────────── main() ───────────────────────────────
+def main() -> None:
+    """Serve the Panel application on the desired port."""
+    root_tabs = pn.Tabs(
+        ("H Data", _organ_tabs("Re")),
+        ("F Data", _organ_tabs("F_Re")),
+        dynamic=True,
+    )
+
+    port = 4603 if ENV_CHECK == "DEV" else 80
+    pn.serve(root_tabs, port=port, websocket_origin=["*"])
+
+# ───────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     notify_webhook()
     main()

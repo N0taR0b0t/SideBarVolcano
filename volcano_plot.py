@@ -19,9 +19,10 @@ def generate_plot(df, comparison_idx, comparisons, selected_ids=None):
         opacity = np.where(df['Compounds ID'].isin(selected_ids), 1.0, 0.005)
 
     # Determine colors
+    # Flip red and green (red = upregulated, green = downregulated)
     color_map = np.where(df['Gold'], 'gold',
-                  np.where(df[f'{fc_col}_sig_up'], 'green',
-                  np.where(df[f'{fc_col}_sig_down'], 'red', 'blue')))
+                np.where(df[f'{fc_col}_sig_up'], 'red',
+                np.where(df[f'{fc_col}_sig_down'], 'green', 'blue')))
 
     # Create hover text
     hover_text = (
@@ -47,7 +48,7 @@ def generate_plot(df, comparison_idx, comparisons, selected_ids=None):
     # Add legend traces
     legend_traces = [
         go.Scatter(x=[None], y=[None], mode='markers', marker=dict(size=12, color='gold'),
-                  showlegend=True, name='Top 50 Distance'),
+                  showlegend=True, name='Top 25 Distance'),
         go.Scatter(x=[None], y=[None], mode='markers', marker=dict(size=12, color='green'),
                   showlegend=True, name='Significant Upregulated'),
         go.Scatter(x=[None], y=[None], mode='markers', marker=dict(size=12, color='red'),
@@ -60,6 +61,11 @@ def generate_plot(df, comparison_idx, comparisons, selected_ids=None):
         fig.add_trace(trace)
 
     # Medium dark gray background with white text/grid
+    # With safe horizontal line and gray dashes
+    x_vals = df[fc_col].dropna().values
+    x0 = float(np.min(x_vals)) if len(x_vals) > 0 else -2
+    x1 = float(np.max(x_vals)) if len(x_vals) > 0 else 2
+
     fig.update_layout(
         title=title,
         xaxis_title=f"Log2 Fold Change: {fc_col}",
@@ -68,17 +74,50 @@ def generate_plot(df, comparison_idx, comparisons, selected_ids=None):
         paper_bgcolor="#4f4f4f",
         font=dict(color="white"),
         shapes=[
-            dict(type="line", x0=-8, x1=8, y0=-np.log10(0.05), y1=-np.log10(0.05),
-                line=dict(color="white", dash="dash")),
-            dict(type="line", x0=-0.5, x1=-0.5, y0=0, y1=1, yref="paper",
-                line=dict(color="white", dash="dash")),
-            dict(type="line", x0=0.5, x1=0.5, y0=0, y1=1, yref="paper",
-                line=dict(color="white", dash="dash"))
+            dict(
+                type="line",
+                xref="x", yref="y",
+                x0=x0, x1=x1,
+                y0=-np.log10(0.05), y1=-np.log10(0.05),
+                line=dict(color="gray", dash="dash")
+                
+            ),
+            dict(
+                type="line",
+                xref="x", yref="paper",
+                x0=-0.5, x1=-0.5,
+                y0=0, y1=1,
+                line=dict(color="gray", dash="dash")
+            ),
+            dict(
+                type="line",
+                xref="x", yref="paper",
+                x0=0.5, x1=0.5,
+                y0=0, y1=1,
+                line=dict(color="gray", dash="dash")
+            )
         ],
         legend=dict(font=dict(color="white"), bgcolor="#5f5f5f")
     )
 
     fig.update_xaxes(showgrid=True, gridcolor="white", gridwidth=0.5, color="white")
     fig.update_yaxes(showgrid=True, gridcolor="white", gridwidth=0.5, color="white")
+
+    # Auto zoom when compounds are selected
+    if selected_ids:
+        selected = df[df['Compounds ID'].isin(selected_ids)]
+        if not selected.empty:
+            x_vals = selected[fc_col].dropna().values
+            y_vals = selected[f'-Log10({pv_col})'].dropna().values
+
+            if len(x_vals) > 0 and len(y_vals) > 0:
+                x_min, x_max = np.min(x_vals), np.max(x_vals)
+                y_min, y_max = np.min(y_vals), np.max(y_vals)
+
+                # Avoid invisible zoom by padding range
+                if np.isfinite(x_min) and np.isfinite(x_max) and x_min != x_max:
+                    fig.update_xaxes(range=[x_min - 0.5, x_max + 0.5])
+                if np.isfinite(y_min) and np.isfinite(y_max) and y_min != y_max:
+                    fig.update_yaxes(range=[y_min - 1, y_max + 1])
 
     return fig

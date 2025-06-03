@@ -1,13 +1,13 @@
 import os
 from column_mapper import extract_column_mapping, save_mapping
 from distCalc import compute_compound_distances
-from ModularVolcanos import generate_volcano_plot
+#from ModularVolcanos import generate_volcano_plot
 
 def is_valid_csv(filename):
     return (
         filename.endswith(".csv") and
-        filename.startswith("Re") and
-        "_" not in os.path.splitext(filename)[0]
+        filename.startswith("F_Re") and
+        os.path.splitext(filename)[0].count("_") <= 1
     )
 
 def main():
