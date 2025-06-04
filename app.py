@@ -8,9 +8,24 @@ import os
 import param
 import requests
 import panel as pn
-
 from utils import load_and_prepare_data
 from volcano_plot import generate_plot
+
+pn.config.raw_css.append("""
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important;
+    height: 100%;
+}
+
+/* Applies to all tab buttons */
+.bk-tab {
+    font-size: 12px !important;
+    font-weight: bold !important;
+    padding: 8px 12px !important;
+}
+""")
 
 # ────────────────────────────── Panel setup ───────────────────────────
 pn.extension("plotly", "tabulator")  # single extension call keeps memory tight
@@ -63,18 +78,18 @@ class VolcanoApp(param.Parameterized):
         ]
         self.table = pn.widgets.Tabulator(
             pagination=None,
-            height=800,
+            #height=725,
             selectable="checkbox",
             header_align="center",
             layout="fit_columns",
-            sizing_mode="stretch_width",
+            sizing_mode="stretch_both",
             show_index=False,
             theme="midnight",
             hidden_columns=["Compounds ID", "abs_fc"],
         )
         self.table.columns = self.table_columns
 
-        self.plot_pane = pn.pane.Plotly(sizing_mode="stretch_width", min_height=900)
+        self.plot_pane = pn.pane.Plotly(sizing_mode="stretch_both") #, min_height=900)
 
         # Wire callbacks
         self.comparison_select.param.watch(self._update_comparison, "value")
@@ -179,7 +194,7 @@ class VolcanoApp(param.Parameterized):
         return pn.Row(
             control_panel,
             main_panel,
-            styles={"background": "#606060"},
+            styles={"background": "#606060", "height": "100vh"},
             sizing_mode="stretch_width",
             margin=0,
         )
@@ -228,7 +243,9 @@ def main() -> None:
         ("H Data", _organ_tabs("Re")),
         ("F Data", _organ_tabs("F_Re")),
         dynamic=True,
+        sizing_mode="stretch_height",
     )
+
 
     port = 4603 if ENV_CHECK == "DEV" else 80
     pn.serve(root_tabs, port=port, websocket_origin=["*"])

@@ -91,8 +91,11 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
         print(f"[DEBUG] Comparison {i+1}: fold_change_col = '{fc_col}', p_value_col = '{pv_col}'")
 
         if fc_col in raw_data.columns and pv_col in raw_data.columns:
-            raw_data[fc_col] = pd.to_numeric(clean_cell_values(raw_data[fc_col]), errors='coerce')
-            raw_data[pv_col] = pd.to_numeric(clean_cell_values(raw_data[pv_col]), errors='coerce')
+            #raw_data[fc_col] = pd.to_numeric(clean_cell_values(raw_data[fc_col]), errors='coerce')
+            #raw_data[pv_col] = pd.to_numeric(clean_cell_values(raw_data[pv_col]), errors='coerce')
+            raw_data[fc_col] = pd.to_numeric(clean_cell_values(raw_data[fc_col]), errors='coerce').replace([np.inf, -np.inf], np.nan)
+            raw_data[pv_col] = pd.to_numeric(clean_cell_values(raw_data[pv_col]), errors='coerce').replace([np.inf, -np.inf], np.nan)
+
 
             # Diagnostic output
             valid_pvals = raw_data[pv_col].dropna()
