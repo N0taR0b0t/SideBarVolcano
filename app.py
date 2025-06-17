@@ -236,15 +236,30 @@ def _organ_tabs(prefix: str) -> pn.Tabs:
         dynamic=True,
     )
 
+def _single_tab(prefix: str, label: str) -> pn.Tabs:
+    """
+    Builds a single tab (no organs) for datasets like Plasma.
+    """
+    panel = pn.panel(
+        lambda: VolcanoApp(
+            f"{prefix}.csv",
+            f"{prefix}_by_distance_named.csv",
+            f"{prefix}.csv",
+        ).panel()
+    )
+    return pn.Tabs((label, panel), dynamic=True)
+
 # ──────────────────────────────── main() ───────────────────────────────
 def main() -> None:
     """Serve the Panel application on the desired port."""
     root_tabs = pn.Tabs(
         ("H Data", _organ_tabs("Re")),
         ("F Data", _organ_tabs("F_Re")),
+        ("Plasma Data", _single_tab("Plasma", "Plasma")),
         dynamic=True,
         sizing_mode="stretch_height",
     )
+
 
 
     port = 4603 if ENV_CHECK == "DEV" else 80
