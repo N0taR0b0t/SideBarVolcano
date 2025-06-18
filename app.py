@@ -260,8 +260,6 @@ def main() -> None:
         sizing_mode="stretch_height",
     )
 
-
-
     port = 4603 if ENV_CHECK == "DEV" else 80
     pn.serve(root_tabs, port=port, websocket_origin=["*"])
 

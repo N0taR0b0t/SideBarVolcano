@@ -7,18 +7,18 @@ from column_mapper import extract_column_mapping, save_mapping
 from distCalc import compute_compound_distances
 
 # ─────────────────────────────────────────────────────────────
-IDENTIFIER = "Re"
+IDENTIFIER = "plasma"
 REQUIRED_COLUMN = "Compounds ID"
 ENCODING = "latin1"
 DELIMITER = ","
 
 # ─────────────────────────────────────────────────────────────
 def is_valid_csv(filename):
-    filename_lower = filename.lower()
+    filename = filename
     return (
-        filename_lower.endswith(".csv")
-        and filename_lower.startswith(IDENTIFIER.lower())
-        and os.path.splitext(filename_lower)[0].count("_") <= 1
+        filename.endswith(".csv")
+        and filename.startswith(IDENTIFIER)
+        and os.path.splitext(filename)[0].count("_") <= 1
     )
 
 def sanitize_quotes_and_commas(raw_line: str, expected_fields: int) -> str or None:
@@ -115,7 +115,7 @@ def main():
     for csv_file in csv_files:
         print(f"\n🔍 Processing: {csv_file}")
 
-        base_name = os.path.splitext(csv_file)[0].lower()
+        base_name = os.path.splitext(csv_file)[0]
         cleaned_file = base_name + ".csv"
         mapping_file = f"{base_name}_column_mapping.json"
         distance_file = f"{base_name}_by_distance_named.csv"
