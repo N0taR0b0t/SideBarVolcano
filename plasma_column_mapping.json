@@ -6,6 +6,21 @@
             "title": "Volcano Plot: (6h-lps) / (16h-lps)"
         },
         {
+            "fold_change_col": "Log2 Fold Change: (ctrl) / (6h-lps)",
+            "p_value_col": "P-value: (ctrl) / (6h-lps)",
+            "title": "Volcano Plot: (ctrl) / (6h-lps)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (6h-cla-lps) / (16h-lps-cla)",
+            "p_value_col": "P-value: (6h-cla-lps) / (16h-lps-cla)",
+            "title": "Volcano Plot: (6h-cla-lps) / (16h-lps-cla)"
+        },
+        {
+            "fold_change_col": "Log2 Fold Change: (cla) / (6h-cla-lps)",
+            "p_value_col": "P-value: (cla) / (6h-cla-lps)",
+            "title": "Volcano Plot: (cla) / (6h-cla-lps)"
+        },
+        {
             "fold_change_col": "Log2 Fold Change: (16h-lps-cla) / (16h-lps)",
             "p_value_col": "P-value: (16h-lps-cla) / (16h-lps)",
             "title": "Volcano Plot: (16h-lps-cla) / (16h-lps)"
@@ -16,24 +31,9 @@
             "title": "Volcano Plot: (6h-cla-lps) / (6h-lps)"
         },
         {
-            "fold_change_col": "Log2 Fold Change: (ctrl) / (6h-lps)",
-            "p_value_col": "P-value: (ctrl) / (6h-lps)",
-            "title": "Volcano Plot: (ctrl) / (6h-lps)"
-        },
-        {
             "fold_change_col": "Log2 Fold Change: (cla) / (ctrl)",
             "p_value_col": "P-value: (cla) / (ctrl)",
             "title": "Volcano Plot: (cla) / (ctrl)"
-        },
-        {
-            "fold_change_col": "Log2 Fold Change: (cla) / (6h-cla-lps)",
-            "p_value_col": "P-value: (cla) / (6h-cla-lps)",
-            "title": "Volcano Plot: (cla) / (6h-cla-lps)"
-        },
-        {
-            "fold_change_col": "Log2 Fold Change: (6h-cla-lps) / (16h-lps-cla)",
-            "p_value_col": "P-value: (6h-cla-lps) / (16h-lps-cla)",
-            "title": "Volcano Plot: (6h-cla-lps) / (16h-lps-cla)"
         }
     ]
 }
