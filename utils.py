@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import json
+from pathlib import Path  # ← added for case-insensitive fallback
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -20,13 +21,30 @@ def clean_cell_values(series):
         return series
 
 def robust_load_csv(filepath, expected_columns=None):
+    path = Path(filepath)
+
+    # ――― case-insensitive rescue ―――
+    if not path.exists():
+        parent = path.parent if path.parent != Path("") else Path(".")
+        match = next(
+            (p for p in parent.glob("*") if p.name.lower() == path.name.lower()),
+            None,
+        )
+        if match is not None:
+            path = match
+        else:
+            raise RuntimeError(
+                f"[ERROR] Could not load {filepath}: file not found (also no "
+                "case-insensitive match in the same directory)"
+            )
+
     try:
         df = pd.read_csv(
-            filepath, encoding="ISO-8859-1", engine="python",
+            path, encoding="ISO-8859-1", engine="python",
             sep=",", quotechar='"', on_bad_lines="skip"
         )
     except Exception as e:
-        raise RuntimeError(f"[ERROR] Could not load {filepath}: {e}")
+        raise RuntimeError(f"[ERROR] Could not load {path}: {e}")
 
     df.columns = clean_column_names(df.columns)
     df = df.loc[:, ~df.columns.duplicated()]
@@ -46,7 +64,7 @@ def apply_fallback_names(df):
             df[col] = np.nan
         else:
             df[col] = clean_cell_values(df[col])
-    df['Name'] = df['Name'].fillna(df['Formula']).fillna(df['m/z'])  # <- updated fallback chain
+    df['Name'] = df['Name'].fillna(df['Formula']).fillna(df['m/z'])  # ← updated fallback chain
     df['Formula'] = df['Formula'].fillna('---')
     return df
 
@@ -76,7 +94,6 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
     raw_data = pd.concat([raw_data, pd.DataFrame({'Gold': raw_data['Compounds ID'].isin(gold_ids)})], axis=1).copy()
 
     # Load column mapping
-    mapping_key = mapping_key
     mapping_file = mapping_key.replace(".csv", "_column_mapping.json")
     with open(mapping_file) as f:
         mapping_data = json.load(f)
@@ -92,13 +109,9 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
         print(f"[DEBUG] Comparison {i+1}: fold_change_col = '{fc_col}', p_value_col = '{pv_col}'")
 
         if fc_col in raw_data.columns and pv_col in raw_data.columns:
-            #raw_data[fc_col] = pd.to_numeric(clean_cell_values(raw_data[fc_col]), errors='coerce')
-            #raw_data[pv_col] = pd.to_numeric(clean_cell_values(raw_data[pv_col]), errors='coerce')
             raw_data[fc_col] = pd.to_numeric(clean_cell_values(raw_data[fc_col]), errors='coerce').replace([np.inf, -np.inf], np.nan)
             raw_data[pv_col] = pd.to_numeric(clean_cell_values(raw_data[pv_col]), errors='coerce').replace([np.inf, -np.inf], np.nan)
 
-
-            # Diagnostic output
             valid_pvals = raw_data[pv_col].dropna()
             num_valid = len(valid_pvals)
             num_below_thresh = (valid_pvals < 0.05).sum()

@@ -43,7 +43,7 @@ class VolcanoApp(param.Parameterized):
 
         # Lazy-load and preprocess data for the chosen organ/dataset group
         self.df, self.comparisons = load_and_prepare_data(
-            data_file.lower(), distance_file.lower(), mapping_key
+            data_file, distance_file, mapping_key
         )
 
         # Build widgets
