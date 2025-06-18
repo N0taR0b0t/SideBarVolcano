@@ -7,17 +7,18 @@ from column_mapper import extract_column_mapping, save_mapping
 from distCalc import compute_compound_distances
 
 # ─────────────────────────────────────────────────────────────
-IDENTIFIER = "Re"
+IDENTIFIER = "re"
 REQUIRED_COLUMN = "Compounds ID"
 ENCODING = "latin1"
 DELIMITER = ","
 
 # ─────────────────────────────────────────────────────────────
 def is_valid_csv(filename):
+    filename_lower = filename.lower()
     return (
-        filename.endswith(".csv")
-        and filename.startswith(IDENTIFIER)
-        and os.path.splitext(filename)[0].count("_") <= 1
+        filename_lower.endswith(".csv")
+        and filename_lower.startswith(IDENTIFIER)
+        and os.path.splitext(filename_lower)[0].count("_") <= 1
     )
 
 def sanitize_quotes_and_commas(raw_line: str, expected_fields: int) -> str or None:
@@ -104,7 +105,8 @@ def load_clean_csv(path: str) -> pd.DataFrame:
 
 # ─────────────────────────────────────────────────────────────
 def main():
-    csv_files = [f for f in os.listdir(".") if is_valid_csv(f)]
+    files_in_dir = os.listdir(".")
+    csv_files = [f for f in files_in_dir if is_valid_csv(f)]
 
     if not csv_files:
         print("❌ No valid CSV files found.")
@@ -112,8 +114,11 @@ def main():
 
     for csv_file in csv_files:
         print(f"\n🔍 Processing: {csv_file}")
-        cleaned_file = os.path.splitext(csv_file)[0].lower() + ".csv"
-        cleaned_file = cleaned_file.lower()
+
+        base_name = os.path.splitext(csv_file)[0].lower()
+        cleaned_file = base_name + ".csv"
+        mapping_file = f"{base_name}_column_mapping.json"
+        distance_file = f"{base_name}_by_distance_named.csv"
 
         try:
             rows_kept = clean_csv_file(csv_file, cleaned_file)
@@ -122,10 +127,6 @@ def main():
             df = load_clean_csv(cleaned_file)
             validate_compound_ids(df, cleaned_file)
             print(f"✅ '{REQUIRED_COLUMN}' column is valid.")
-
-            base_name = os.path.splitext(csv_file)[0].lower()
-            mapping_file = f"{base_name}_column_mapping.json"
-            distance_file = f"{base_name}_by_distance_named.csv"
 
             mapping = extract_column_mapping(cleaned_file)
             save_mapping(mapping, mapping_file)
