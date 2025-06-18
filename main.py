@@ -7,7 +7,7 @@ from column_mapper import extract_column_mapping, save_mapping
 from distCalc import compute_compound_distances
 
 # ─────────────────────────────────────────────────────────────
-IDENTIFIER = "plasma"
+IDENTIFIER = "Re"
 REQUIRED_COLUMN = "Compounds ID"
 ENCODING = "latin1"
 DELIMITER = ","
@@ -17,7 +17,7 @@ def is_valid_csv(filename):
     filename_lower = filename.lower()
     return (
         filename_lower.endswith(".csv")
-        and filename_lower.startswith(IDENTIFIER)
+        and filename_lower.startswith(IDENTIFIER.lower())
         and os.path.splitext(filename_lower)[0].count("_") <= 1
     )
 
