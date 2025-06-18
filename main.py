@@ -7,7 +7,7 @@ from column_mapper import extract_column_mapping, save_mapping
 from distCalc import compute_compound_distances
 
 # ─────────────────────────────────────────────────────────────
-IDENTIFIER = "plasma"
+IDENTIFIER = "Re"
 REQUIRED_COLUMN = "Compounds ID"
 ENCODING = "latin1"
 DELIMITER = ","
@@ -112,7 +112,7 @@ def main():
 
     for csv_file in csv_files:
         print(f"\n🔍 Processing: {csv_file}")
-        cleaned_file = os.path.splitext(csv_file)[0] + ".csv"
+        cleaned_file = os.path.splitext(csv_file)[0].lower() + ".csv"
         cleaned_file = cleaned_file.lower()
 
         try:
@@ -123,9 +123,9 @@ def main():
             validate_compound_ids(df, cleaned_file)
             print(f"✅ '{REQUIRED_COLUMN}' column is valid.")
 
-            base_name = os.path.splitext(csv_file)[0]
+            base_name = os.path.splitext(csv_file)[0].lower()
             mapping_file = f"{base_name}_column_mapping.json"
-            distance_file = f"{base_name}_by_distance_named.csv".lower()
+            distance_file = f"{base_name}_by_distance_named.csv"
 
             mapping = extract_column_mapping(cleaned_file)
             save_mapping(mapping, mapping_file)
