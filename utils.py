@@ -76,7 +76,7 @@ def load_and_prepare_data(data_file, distance_file, mapping_key):
     raw_data = pd.concat([raw_data, pd.DataFrame({'Gold': raw_data['Compounds ID'].isin(gold_ids)})], axis=1).copy()
 
     # Load column mapping
-    mapping_key = mapping_key.lower()
+    mapping_key = mapping_key
     mapping_file = mapping_key.replace(".csv", "_column_mapping.json")
     with open(mapping_file) as f:
         mapping_data = json.load(f)
