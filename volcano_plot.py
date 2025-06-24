@@ -69,7 +69,7 @@ def generate_plot(df, comparison_idx, comparisons, selected_ids=None):
     fig.update_layout(
         title=title,
         xaxis_title=f"Log2 Fold Change: {fc_col}",
-        yaxis_title=f"-Log10(P-value): {fc_col}",
+        yaxis_title=f"-Log10(P-value): {pv_col}",
         plot_bgcolor="#4f4f4f",
         paper_bgcolor="#4f4f4f",
         font=dict(color="white"),
