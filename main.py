@@ -7,7 +7,7 @@ from column_mapper import extract_column_mapping, save_mapping
 from distCalc import compute_compound_distances
 
 # ─────────────────────────────────────────────────────────────
-IDENTIFIER = "Plasma"
+IDENTIFIER = "SysPlas"
 REQUIRED_COLUMN = "Compounds ID"
 ENCODING = "latin1"
 DELIMITER = ","
