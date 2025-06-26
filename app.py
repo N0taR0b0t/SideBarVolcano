@@ -255,7 +255,7 @@ def main() -> None:
     root_tabs = pn.Tabs(
         ("H Data", _organ_tabs("Re")),
         ("F Data", _organ_tabs("F_Re")),
-        ("Plasma Data", _single_tab("Plasma", "Plasma")),
+        ("Plasma Data", _single_tab("SysPlas2", "Plasma")),
         dynamic=True,
         sizing_mode="stretch_height",
     )
